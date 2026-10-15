@@ -148,6 +148,7 @@ For local development when creating a new migration after intentionally changing
 ```bash
 npx prisma migrate dev --name describe-your-change
 npx prisma generate
+npx prisma studio
 ```
 
 Do not use `migrate dev`, database resets, or destructive seed commands against a shared or production database.
