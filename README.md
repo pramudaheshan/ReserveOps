@@ -12,12 +12,6 @@ The dashboard provides a quick operational view of resource usage, reservation v
 
 ![ReserveOps dashboard](./src/Dashboard.png)
 
-### Entity relationship diagram
-
-The entity relationship diagram shows the relationships between users, resources, and reservations.
-
-![ReserveOps entity relationship diagram](./src/ER.png)
-
 ## Features
 
 - Dashboard with:
@@ -162,6 +156,12 @@ The current schema contains:
 Supported resource types are `MEETING_ROOM`, `LAPTOP`, `PROJECTOR`, `VEHICLE`, and `OTHER`.
 
 Supported reservation statuses are `CONFIRMED`, `CANCELLED`, and `COMPLETED`.
+
+### Entity relationship diagram
+
+The entity relationship diagram shows the relationships between users, resources, and reservations.
+
+![ReserveOps entity relationship diagram](./src/ER.png)
 
 ## Running the application
 
