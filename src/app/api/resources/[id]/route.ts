@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma7";
 import { resourceSchema } from "@/lib/validations";
+import { getSession } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,10 @@ type Context = {
 
 export async function PATCH(request: Request, context: Context) {
   try {
+    const session = await getSession();
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+    }
     const { id } = await context.params;
     const body: unknown = await request.json();
     const parsed = resourceSchema.safeParse(body);
@@ -48,6 +53,10 @@ export async function PATCH(request: Request, context: Context) {
 
 export async function DELETE(_request: Request, context: Context) {
   try {
+    const session = await getSession();
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Administrator access required" }, { status: 403 });
+    }
     const { id } = await context.params;
 
     const resource = await prisma.resource.findUnique({ where: { id } });

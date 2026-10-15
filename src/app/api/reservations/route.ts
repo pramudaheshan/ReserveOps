@@ -3,12 +3,31 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma7";
 import { reservationSchema } from "@/lib/validations";
+import { getSession } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const session = await getSession();
+        if (!session) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+        const url = new URL(request.url);
+        const from = url.searchParams.get("from");
+        const to = url.searchParams.get("to");
+        const startTime = from ? new Date(from) : undefined;
+        const endTime = to ? new Date(to) : undefined;
+        if ((from && Number.isNaN(startTime?.getTime())) || (to && Number.isNaN(endTime?.getTime()))) {
+            return NextResponse.json({ error: "Invalid date range" }, { status: 400 });
+        }
         const reservations = await prisma.reservation.findMany({
+            where: {
+                ...(startTime || endTime
+                    ? {
+                        ...(endTime ? { startTime: { lt: endTime } } : {}),
+                        ...(startTime ? { endTime: { gt: startTime } } : {}),
+                    }
+                    : {}),
+            },
             include: {
                 resource: true,
                 user: {
@@ -51,6 +70,14 @@ export async function POST(request: Request) {
             endTime,
             purpose,
         } = parsed.data;
+        const session = await getSession();
+        if (!session) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+        if (session.role !== "ADMIN" && session.email.toLowerCase() !== userEmail.toLowerCase()) {
+            return NextResponse.json({ error: "You may only create reservations for your signed-in account" }, { status: 403 });
+        }
+        if (startTime <= new Date()) {
+            return NextResponse.json({ error: "Reservations must start in the future" }, { status: 400 });
+        }
 
         // Retry serialization conflicts caused by concurrent requests.
         for (let attempt = 0; attempt < 3; attempt++) {
